@@ -28,17 +28,17 @@ func NewIndexer(indexPath string, workers int) *Indexer {
 	}
 }
 
-func (idx *Indexer) ProcessFile(filename string) error{
+func (idx *Indexer) ProcessFile(filename string) error {
 	docChan := make(chan *Document, 1000)
 
 	// worker goroutines
 	var wg sync.WaitGroup
 	for i := 0; i < idx.workers; i++ {
 		wg.Add(1)
-		go func ()  {
+		go func() {
 			defer wg.Done()
-			
-			for doc := range docChan{
+
+			for doc := range docChan {
 				idx.addDocument(doc)
 			}
 		}()
@@ -53,22 +53,40 @@ func (idx *Indexer) ProcessFile(filename string) error{
 	return err
 }
 
-func (idx *Indexer) addDocument(doc *Document){
+func (idx *Indexer) addDocument(doc *Document) {
 	idx.mutex.Lock()
 	defer idx.mutex.Unlock()
 
-	idx.documents[doc.ID]= doc
+	idx.documents[doc.ID] = doc
 	idx.docCount++
 
-	for term := range doc.Terms{
-		if _, exists := idx.termIndex[term]; !exists{
-			idx.termIndex[term]= make([]uint32, 0)
+	for term := range doc.Terms {
+		if _, exists := idx.termIndex[term]; !exists {
+			idx.termIndex[term] = make([]uint32, 0)
 		}
 
 		idx.termIndex[term] = append(idx.termIndex[term], doc.ID)
 	}
 
-	if idx.docCount%1000 == 0{
+	if idx.docCount%1000 == 0 {
 		fmt.Printf("Processed %d documents... \n", idx.docCount)
 	}
+}
+
+func (idx *Indexer) BuildIndex() error {
+	fmt.Println("building index structures")
+	// doc lenth
+	totalLen := 0
+	for _, doc := range idx.documents {
+		totalLen += doc.Length
+	}
+	if idx.docCount > 0 {
+		idx.avgDocLen = float64(totalLen) / float64(idx.docCount)
+	}
+
+	fmt.Printf("Total documents: %d\n", idx.docCount)
+	fmt.Printf("Total terms: %d\n", len(idx.termIndex))
+	fmt.Printf("Average document length: %.2f\n", idx.avgDocLen)
+
+	return nil
 }
