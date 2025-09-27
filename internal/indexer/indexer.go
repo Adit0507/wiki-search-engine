@@ -1,16 +1,20 @@
 package indexer
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
+	"github.com/Adit0507/wiki-search-engine/internal/models"
 	"github.com/Adit0507/wiki-search-engine/internal/storage"
 )
 
 type Indexer struct {
 	indexPath string
 	workers   int
-	documents map[uint32]*Document
+	documents map[uint32]*models.Document
 	termIndex map[string][]uint32
 	docCount  int
 	avgDocLen float64
@@ -22,14 +26,14 @@ func NewIndexer(indexPath string, workers int) *Indexer {
 	return &Indexer{
 		indexPath: indexPath,
 		workers:   workers,
-		documents: make(map[uint32]*Document),
+		documents: make(map[uint32]*models.Document),
 		termIndex: make(map[string][]uint32),
 		storage:   storage.NewDiskStorage(indexPath),
 	}
 }
 
 func (idx *Indexer) ProcessFile(filename string) error {
-	docChan := make(chan *Document, 1000)
+	docChan := make(chan *models.Document, 1000)
 
 	// worker goroutines
 	var wg sync.WaitGroup
@@ -53,7 +57,7 @@ func (idx *Indexer) ProcessFile(filename string) error {
 	return err
 }
 
-func (idx *Indexer) addDocument(doc *Document) {
+func (idx *Indexer) addDocument(doc *models.Document) {
 	idx.mutex.Lock()
 	defer idx.mutex.Unlock()
 
@@ -89,4 +93,32 @@ func (idx *Indexer) BuildIndex() error {
 	fmt.Printf("Average document length: %.2f\n", idx.avgDocLen)
 
 	return nil
+}
+
+func (idx *Indexer) SaveToDisk() error {
+	metadata := map[string]interface{}{
+        "doc_count":    idx.docCount,
+        "avg_doc_len":  idx.avgDocLen,
+        "total_terms":  len(idx.termIndex),
+    }
+
+	metaFile := filepath.Join(idx.indexPath, "metadata.json")
+	metaData, _ := json.Marshal(metadata)
+	if err := os.WriteFile(metaFile, metaData, 0644); err != nil{
+		return err
+	}
+
+	// savin documents
+	fmt.Println("saving docs...")
+	if err := idx.storage.SaveDocuments(idx.documents); err != nil {
+		return err
+	}
+
+	// savin term index
+	fmt.Println("saving term index")
+	if err := idx.storage.SaveTermIndex(idx.termIndex); err != nil{
+		return err
+	}
+
+	return  nil
 }

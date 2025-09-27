@@ -8,6 +8,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/Adit0507/wiki-search-engine/internal/models"
 )
 
 type Redirect struct {
@@ -22,11 +24,11 @@ type WikiPage struct {
 }
 
 type Parser struct {
-	docChan chan<- *Document
+	docChan chan<- *models.Document
 	docID   uint32
 }
 
-func NewParser(docChan chan<- *Document) *Parser {
+func NewParser(docChan chan<- *models.Document) *Parser {
 	return &Parser{
 		docChan: docChan,
 		docID:   0,
@@ -98,7 +100,7 @@ func (p *Parser) shouldIndex(page *WikiPage) bool {
 	return true
 }
 
-func (p *Parser) createDocument(page *WikiPage) *Document {
+func (p *Parser) createDocument(page *WikiPage) *models.Document {
 	p.docID++
 
 	// clean the content
@@ -109,7 +111,7 @@ func (p *Parser) createDocument(page *WikiPage) *Document {
 
 	url := fmt.Sprintf("https://en.wikipedia.org/wiki/%s", strings.ReplaceAll(page.Title, " ", "_"))
 
-	return NewDocument(p.docID, page.Title, content, url)
+	return models.NewDocument(p.docID, page.Title, content, url)
 }
 
 func (p *Parser) cleanWikiText(text string) string {
