@@ -2,6 +2,7 @@ package search
 
 import (
 	"math"
+	"strings"
 
 	"github.com/Adit0507/wiki-search-engine/internal/models"
 )
@@ -25,6 +26,46 @@ func NewBM25(documents map[uint32]*models.Document, termIndex map[string][]uint3
 		docCount:  docCount,
 		avgDocLen: avgDocLen,
 	}
+}
+
+func (bm *BM25) generateSnippet(doc *models.Document, terms []string, maxLen int) string {
+	content := doc.Content
+	if len(content) <= maxLen {
+		return content
+	}
+
+	// best positiomn to extract snippet
+	lower := strings.ToLower(content)
+	bestPos := 0
+	bestScore := 0
+
+	for i := 0; i < len(content)-maxLen; i += 50 {
+		score := 0
+		snippet := lower[i : i+maxLen]
+
+		for _, term := range terms {
+			score += strings.Count(snippet, term)
+		}
+
+		if score > bestScore {
+			bestScore = score
+			bestPos = i
+		}
+	}
+
+	snippet := content[bestPos : bestPos+maxLen]
+
+	// trim to word boundaries
+	if bestPos > 0 {
+		if spaceIdx := strings.Index(snippet, " "); spaceIdx > 0 {
+			snippet = snippet[spaceIdx+1:]
+		}
+	}
+	if lastSpace := strings.LastIndex(snippet, " "); lastSpace > 0 {
+		snippet = snippet[:lastSpace]
+	}
+
+	return snippet + "..."
 }
 
 func (bm *BM25) getCandidateDocuments(terms []string) map[uint32]bool {
