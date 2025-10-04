@@ -2,9 +2,11 @@ package search
 
 import (
 	"math"
+	"sort"
 	"strings"
 
 	"github.com/Adit0507/wiki-search-engine/internal/models"
+	"github.com/Adit0507/wiki-search-engine/internal/utils"
 )
 
 const (
@@ -26,6 +28,56 @@ func NewBM25(documents map[uint32]*models.Document, termIndex map[string][]uint3
 		docCount:  docCount,
 		avgDocLen: avgDocLen,
 	}
+}
+
+func (bm *BM25) Search(query string, limit int) ([]Result, error) {
+	// tokenize and stem query
+	terms := utils.Tokenize(strings.ToLower(query))
+	stemmedTerms := make([]string, 0, len(terms))
+
+	for _, term := range terms {
+		stemmed := utils.Stem(term)
+		if len(stemmed) > 2 {
+			stemmedTerms = append(stemmedTerms, stemmed)
+		}
+	}
+
+	if len(stemmedTerms) == 0 {
+		return []Result{}, nil
+	}
+
+	candidates := bm.getCandidateDocuments(stemmedTerms)
+
+	// scorin documents
+	results := make([]Result, 0, len(candidates))
+	for docID := range candidates {
+		doc := bm.documents[docID]
+		if doc == nil {
+			continue
+		}
+
+		score := bm.calculateBM25Score(stemmedTerms, doc)
+		if score > 0 {
+			snippet := bm.generateSnippet(doc, stemmedTerms, 200)
+			results = append(results, Result{
+				DocID:   docID,
+				Title:   doc.Title,
+				URL:     doc.URL,
+				Score:   score,
+				Snippet: snippet,
+			})
+		}
+	}
+
+	// sortin by score
+	sort.Sort(ResultSet(results))
+
+	// limit results
+	if limit < len(results) {
+		results = results[:limit]
+	}
+
+	return results, nil
 }
 
 func (bm *BM25) generateSnippet(doc *models.Document, terms []string, maxLen int) string {
