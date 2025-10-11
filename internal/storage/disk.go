@@ -16,24 +16,52 @@ func NewDiskStorage(indexPath string) *DiskStorage {
 	return &DiskStorage{indexPath: indexPath}
 }
 
-func (ds *DiskStorage) SaveDocuments(documents map[uint32] *models.Document) error {
+func (ds *DiskStorage) SaveDocuments(documents map[uint32]*models.Document) error {
 	file, err := os.Create(filepath.Join(ds.indexPath, "documents.gob"))
-    if err != nil {
-        return err
-    }
-    defer file.Close()
-    
-    encoder := gob.NewEncoder(file)
-    return encoder.Encode(documents)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := gob.NewEncoder(file)
+	return encoder.Encode(documents)
 }
 
-func (ds *DiskStorage) SaveTermIndex(termIndex map[string][] uint32) error {
+func (ds *DiskStorage) SaveTermIndex(termIndex map[string][]uint32) error {
 	file, err := os.Create(filepath.Join(ds.indexPath, "terms.gob"))
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	defer file.Close()
 
 	encoder := gob.NewEncoder(file)
 	return encoder.Encode(termIndex)
+}
+
+func (ds *DiskStorage) LoadDocuments() (map[uint32]*models.Document, error) {
+	file, err := os.Open(filepath.Join(ds.indexPath, "documents.gob"))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var documents map[uint32]*models.Document
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(&documents)
+
+	return documents, err
+}	
+
+func (ds *DiskStorage) LoadTermIndex() (map[string][]uint32, error) {
+	file, err := os.Open(filepath.Join(ds.indexPath, "terms.gob"))
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var termIndex map[string][]uint32
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(&termIndex)
+
+	return termIndex, err
 }
