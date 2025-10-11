@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -44,6 +45,9 @@ func main() {
 
 	r.HandleFunc("/", server.handleHome).Methods("GET")
 	r.HandleFunc("/search", server.handleSearch).Methods("GET")
+	r.HandleFunc("/api/search", server.handleApiSearch).Methods("GET")
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("web/static/"))))
+
 	fmt.Printf("Server starting on port %d", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), r))
 }
@@ -54,7 +58,7 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
-	if query == ""{
+	if query == "" {
 		s.tmpl.ExecuteTemplate(w, "index.html", nil)
 		return
 	}
@@ -62,8 +66,8 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	limit := 10
 
-	if limitStr != ""{
-		if l, err := strconv.Atoi(limitStr); err == nil && l >0 {
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
 			limit = l
 		}
 	}
@@ -75,12 +79,38 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Query string
+		Query   string
 		Results []search.Result
 	}{
-		Query: query,
+		Query:   query,
 		Results: results,
 	}
 
 	s.tmpl.ExecuteTemplate(w, "index.html", data)
+}
+
+func (s *Server) handleApiSearch(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
+		return
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	limit := 10
+
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	results, err := s.engine.Search(query, limit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
 }
