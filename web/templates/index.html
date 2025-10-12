@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikipedia Search Engine</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wikipedia Search Engine</h1>
+            <p class="subtitle">Built with curiosity</p>
+        </header>
+        
+        <div class="search-container">
+            <form action="/search" method="GET" class="search-form">
+                <div class="search-input-container">
+                    <input type="text" name="q" placeholder="Search Wikipedia..." 
+                           value="{{if .Query}}{{.Query}}{{end}}" class="search-input">
+                    <button type="submit" class="search-button">Search</button>
+                </div>
+                <div class="search-options">
+                    <label>
+                        <input type="number" name="limit" value="10" min="1" max="100" class="limit-input">
+                        Results per page
+                    </label>
+                </div>
+            </form>
+        </div>
+        
+        {{if .Results}}
+        <div class="results-container">
+            <div class="results-meta">
+                Found {{len .Results}} results for "{{.Query}}"
+            </div>
+            
+            <div class="results-list">
+                {{range .Results}}
+                <div class="result-item">
+                    <h3 class="result-title">
+                        <a href="{{.URL}}" target="_blank">{{.Title}}</a>
+                    </h3>
+                    <p class="result-url">{{.URL}}</p>
+                    <p class="result-snippet">{{.Snippet}}</p>
+                    <div class="result-meta">
+                        <span class="result-score">Score: {{printf "%.4f" .Score}}</span>
+                        <span class="result-id">Doc ID: {{.DocID}}</span>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        {{else if .Query}}
+        <div class="no-results">
+            <h3>No results found for "{{.Query}}"</h3>
+            <p>Try different keywords or check your spelling.</p>
+        </div>
+        {{end}}
+    </div>
+    
+    <script src="../static/script.js"></script>
+</body>
+</html>
