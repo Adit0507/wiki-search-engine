@@ -27,7 +27,7 @@ func NewEngine(indexPath string) (*Engine, error) {
 	}
 
 	var metadata map[string]interface{}
-	if err := json.Unmarshal(metaData, &metaData); err != nil {
+	if err := json.Unmarshal(metaData, &metadata); err != nil {
 		return nil, err
 	}
 
