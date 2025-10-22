@@ -53,13 +53,13 @@ func (p *Parser) ParseFile(filename string) error {
 
 	for {
 		token, err := decoder.Token()
+		if err == io.EOF {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
-		if err == io.EOF {
-			break
-		}
-
+		
 		switch se := token.(type) {
 		case xml.StartElement:
 			if se.Name.Local == "page" {
