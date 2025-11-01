@@ -81,50 +81,80 @@ func (bm *BM25) Search(query string, limit int) ([]Result, error) {
 }
 
 func (bm *BM25) generateSnippet(doc *models.Document, terms []string, maxLen int) string {
-	content := doc.Content
-	if len(content) <= maxLen {
-		return content
-	}
-
-	lower := strings.ToLower(content)
-	bestPos := 0
-	bestScore := 0
-
-	for i := 0; i < len(content) - maxLen; i += 50 {
-		score := 0
-
-		endPos := i + maxLen
-		if endPos > len(content) {
-			endPos = len(content)
-		}
-
-		snippet := lower[i: endPos]
-		for _, term := range terms {
-			score += strings.Count(snippet, term)
-		}
-		if score > bestScore {
-			bestScore = score
-			bestPos = i
-		}
-	}
-
-	endPos := bestPos + maxLen
-	if endPos > len(content) {
-		endPos = len(content)
-	}
-
-	snippet := content[bestPos: endPos]
-	
-	if bestPos > 0{
-		if spaceIdx := strings.Index(snippet, " "); spaceIdx > 0 && spaceIdx < len(snippet) {
-            snippet = snippet[spaceIdx+1:]
-        }
-	}
-	if lastSpace := strings.LastIndex(snippet, " "); lastSpace > 0 && lastSpace < len(snippet) {
-        snippet = snippet[:lastSpace]
-    }
-
-	return  snippet + "..."
+    // content := doc.Content
+        // if len(content) == 0 {
+    //     return ""
+    // }
+    
+    // if len(content) <= maxLen {
+    //     return content
+    // }
+    
+    // lower := strings.ToLower(content)
+    // bestPos := 0
+    // bestScore := 0
+    
+    // maxIterations := len(content) - maxLen
+    // if maxIterations < 0 {
+    //     maxIterations = 0
+    // }
+    
+    // for i := 0; i <= maxIterations; i += 50 {
+    //     score := 0
+        
+    //     endPos := i + maxLen
+    //     if endPos > len(content) {
+    //         endPos = len(content)
+    //     }
+        
+    //     if i >= endPos {
+    //         break
+    //     }
+        
+    //     snippet := lower[i:endPos]
+        
+    //     for _, term := range terms {
+    //         score += strings.Count(snippet, term)
+    //     }
+        
+    //     if score > bestScore {
+    //         bestScore = score
+    //         bestPos = i
+    //     }
+    // }
+    
+    // endPos := bestPos + maxLen
+    // if endPos > len(content) {
+    //     endPos = len(content)
+    // }
+    
+    // if bestPos >= len(content) || bestPos >= endPos {
+    //     if len(content) > maxLen {
+    //         return content[:maxLen] + "..."
+    //     }
+    //     return content
+    // }
+    
+    // snippet := content[bestPos:endPos]
+    // if bestPos > 0 {
+    //     if spaceIdx := strings.Index(snippet, " "); spaceIdx > 0 && spaceIdx < len(snippet) {
+    //         snippet = snippet[spaceIdx+1:]
+    //     }
+    // }
+    
+    // if lastSpace := strings.LastIndex(snippet, " "); lastSpace > 0 && lastSpace < len(snippet) {
+    //     snippet = snippet[:lastSpace]
+    // }
+    
+    // if len(snippet) == 0 {
+    //     if len(content) > maxLen {
+    //         return content[:maxLen] + "..."
+    //     }
+    //     return content
+    // }
+    
+    // return snippet + "..."
+	return doc.Title
 }
 
 func (bm *BM25) getCandidateDocuments(terms []string) map[uint32]bool {
