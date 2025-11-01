@@ -86,38 +86,45 @@ func (bm *BM25) generateSnippet(doc *models.Document, terms []string, maxLen int
 		return content
 	}
 
-	// best positiomn to extract snippet
 	lower := strings.ToLower(content)
 	bestPos := 0
 	bestScore := 0
 
-	for i := 0; i < len(content)-maxLen; i += 50 {
+	for i := 0; i < len(content) - maxLen; i += 50 {
 		score := 0
-		snippet := lower[i : i+maxLen]
 
+		endPos := i + maxLen
+		if endPos > len(content) {
+			endPos = len(content)
+		}
+
+		snippet := lower[i: endPos]
 		for _, term := range terms {
 			score += strings.Count(snippet, term)
 		}
-
 		if score > bestScore {
 			bestScore = score
 			bestPos = i
 		}
 	}
 
-	snippet := content[bestPos : bestPos+maxLen]
-
-	// trim to word boundaries
-	if bestPos > 0 {
-		if spaceIdx := strings.Index(snippet, " "); spaceIdx > 0 {
-			snippet = snippet[spaceIdx+1:]
-		}
-	}
-	if lastSpace := strings.LastIndex(snippet, " "); lastSpace > 0 {
-		snippet = snippet[:lastSpace]
+	endPos := bestPos + maxLen
+	if endPos > len(content) {
+		endPos = len(content)
 	}
 
-	return snippet + "..."
+	snippet := content[bestPos: endPos]
+	
+	if bestPos > 0{
+		if spaceIdx := strings.Index(snippet, " "); spaceIdx > 0 && spaceIdx < len(snippet) {
+            snippet = snippet[spaceIdx+1:]
+        }
+	}
+	if lastSpace := strings.LastIndex(snippet, " "); lastSpace > 0 && lastSpace < len(snippet) {
+        snippet = snippet[:lastSpace]
+    }
+
+	return  snippet + "..."
 }
 
 func (bm *BM25) getCandidateDocuments(terms []string) map[uint32]bool {

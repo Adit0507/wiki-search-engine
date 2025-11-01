@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/Adit0507/wiki-search-engine/internal/search"
 	"github.com/gorilla/mux"
@@ -91,6 +92,9 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleApiSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
+
+	query = strings.TrimSpace(query)
+
 	if query == "" {
 		http.Error(w, "Query parameter 'q' is required", http.StatusBadRequest)
 		return
@@ -107,7 +111,7 @@ func (s *Server) handleApiSearch(w http.ResponseWriter, r *http.Request) {
 
 	results, err := s.engine.Search(query, limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Search error: %v", err), http.StatusInternalServerError)
 		return
 	}
 
