@@ -130,7 +130,7 @@ cd data/wikipedia
 
 Click <a href="https://dumps.wikimedia.org/enwiki/latest/">Here</a> to download the data dump 
 
-<i>I went with the <b>enwiki-latest-pages-articles1.xml-p1p41242.bz2 </b> due to some system limitations, if u want the entire data dump go with <b>enwiki-latest-pages-articles1.xml-p1p41242.bz2 (around 23GB)</b> </i>
+<i>I went with the <b>enwiki-latest-pages-articles1.xml-p1p41242.bz2 </b> due to some system limitations, if u want the entire data dump go with <b>enwiki-latest-pages-articles1.xml.bz2 (around 23GB)</b> </i>
 
 Make sure to place the data dump inside <b>data/wikipedia</b>
 
