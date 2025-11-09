@@ -5,6 +5,12 @@ A full-featured search engine built from scratch, implementing the BM25 ranking 
 ## Project Overview 
 This search engine processes 20,000+ Wikipedia articles and provides sub-second query response times using a custom-built inverted index and BM25 relevance ranking. The entire system is built from the ground up to understand the fundamental concepts behind modern search engines.
 
+### Demo 🏄‍♂️
+<img src="./assets/s-1.png" />
+<img src="./assets/s-2.png" />
+<img src="./assets/s-3.png" />
+
+
 ### Key Features
 
 - **Custom BM25 Implementation**: Industry-standard ranking algorithm for relevance scoring
@@ -32,8 +38,7 @@ This search engine processes 20,000+ Wikipedia articles and provides sub-second 
 - **Storage**: Binary serialization (gob format)
 - **Architecture**: Concurrent producer-consumer pattern
 
-
-## System Architecture
+## High Level Architecture
 
 <img src="./assets/architecture-diagram.png" />
 
